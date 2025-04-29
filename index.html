@@ -1,25 +1,62 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Visor 3D GLB</title>
-  <base href="/visor-3d-glb/" />
+  <title>Visor 3D - Pikachu</title>
+  <base href="/Test/" />
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
     canvas { display: block; }
+    #ui {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      color: white;
+    }
+    button {
+      display: block;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background: #ffc107;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background: #e0a800;
+    }
   </style>
 </head>
 <body>
+  <div id="ui">
+    <div><strong>Modelo:</strong> Pikachu</div>
+    <button id="fullscreenBtn">Pantalla completa</button>
+    <button id="bgToggleBtn">Cambiar fondo</button>
+    <button id="resetViewBtn">Restablecer vista</button>
+  </div>
+
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
     import { GLTFLoader } from 'https://unpkg.com/three@0.160.1/examples/jsm/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.1/examples/jsm/controls/OrbitControls.js';
 
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeeeeee);
+
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1, 0);
+    controls.update();
 
     const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
     scene.add(light);
@@ -32,13 +69,46 @@
     });
 
     camera.position.set(0, 1.5, 3);
+    const defaultCameraPos = camera.position.clone();
+    const defaultTarget = controls.target.clone();
 
     function animate() {
       requestAnimationFrame(animate);
+      controls.update();
       renderer.render(scene, camera);
     }
 
     animate();
+
+    // Pantalla completa
+    document.getElementById("fullscreenBtn").addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.body.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    // Cambiar fondo
+    let fondoClaro = true;
+    document.getElementById("bgToggleBtn").addEventListener("click", () => {
+      fondoClaro = !fondoClaro;
+      scene.background = new THREE.Color(fondoClaro ? 0xeeeeee : 0x222222);
+    });
+
+    // Restablecer vista
+    document.getElementById("resetViewBtn").addEventListener("click", () => {
+      camera.position.copy(defaultCameraPos);
+      controls.target.copy(defaultTarget);
+      controls.update();
+    });
+
+    // Redimensionar
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
